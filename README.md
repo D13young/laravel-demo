@@ -24,6 +24,30 @@ docker-compose exec app php artisan migrate
 # Без Docker
 composer install
 php artisan serve
+```
+
+## Архитектура системы
+
+### Диаграмма последовательности
+```mermaid
+sequenceDiagram
+    participant Клиент
+    participant Контроллер as TaskController
+    participant Сервис as TaskService
+    participant БД as Database
+    participant Битрикс as BitrixService
+    participant Очередь as RabbitMQ
+    Клиент->>Контроллер: POST /tasks (JSON)
+    Контроллер->>Сервис: createTask(data)
+    Сервис->>БД: Сохранить задачу
+    БД-->>Сервис: Task object
+    Сервис->>Битрикс: createDeal()
+    Битрикс-->>Сервис: bitrix_id
+    Сервис-->>Контроллер: Результат
+    Контроллер->>Очередь: dispatch(ProcessTaskNotification)
+    Очередь-->>Контроллер: Принято
+    Контроллер-->>Клиент: 201 Created (JSON)
+```
 
 ### Структура классов
 ```mermaid
